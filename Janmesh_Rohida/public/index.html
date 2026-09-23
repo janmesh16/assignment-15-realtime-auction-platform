@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AUCTIONX — Real-Time Live Bidding Engine</title>
+  <!-- Google Fonts for Trading Floor Aesthetics -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- Username Modal Overlay -->
+  <div id="usernameModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="brand-logo">
+          <i class="fa-solid fa-gavel text-accent"></i>
+          <span>AUCTION<span class="text-accent">X</span></span>
+        </div>
+        <h2>Enter Trading Floor</h2>
+        <p>Identify yourself to join real-time live auction rooms</p>
+      </div>
+      <form id="usernameForm">
+        <div class="input-group">
+          <label for="usernameInput"><i class="fa-solid fa-user"></i> Trader Alias</label>
+          <input type="text" id="usernameInput" placeholder="e.g. Vikram, Ananya, Rahul..." required maxlength="20" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          Join Bidding Floor <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Shell -->
+  <div class="app-shell">
+    
+    <!-- Top Navigation Header -->
+    <header class="app-header">
+      <div class="header-container">
+        <div class="brand">
+          <i class="fa-solid fa-bolt brand-icon text-accent"></i>
+          <span class="brand-title">AUCTION<span class="text-accent">X</span></span>
+          <span class="badge badge-live"><span class="pulse-dot"></span> LIVE ENGINE</span>
+        </div>
+
+        <div class="header-actions">
+          <div class="trader-pill">
+            <i class="fa-solid fa-circle-user"></i>
+            <span id="currentTraderName">Connecting...</span>
+          </div>
+          <div class="connection-status" id="connectionStatus">
+            <span class="status-indicator online"></span>
+            <span class="status-text">Socket Connected</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Auction Room Selector Bar -->
+    <section class="auction-tabs-bar">
+      <div class="tabs-container" id="auctionTabs">
+        <!-- Dynamically populated auction tabs -->
+      </div>
+    </section>
+
+    <!-- Floating Banners / Alerts -->
+    <div id="toastContainer" class="toast-container"></div>
+    <div id="antiSnipeBanner" class="anti-snipe-banner hidden">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>ANTI-SNIPE TRIGGERED! +20s EXTENSION ADDED</span>
+    </div>
+
+    <!-- Trading Floor Main Grid -->
+    <main class="trading-floor-grid">
+
+      <!-- Left Column: Auction Item Details & Price Ticker -->
+      <div class="panel main-auction-panel">
+        
+        <!-- Status Bar -->
+        <div class="auction-status-bar">
+          <div class="auction-id-tag">
+            <i class="fa-solid fa-hashtag"></i> <span id="itemAuctionId">AUC_VINTAGE_99</span>
+          </div>
+          <div class="viewer-count-tag" id="viewerCountTag">
+            <i class="fa-solid fa-eye text-accent"></i> <span id="totalViewers">1</span> Watching
+          </div>
+          <div id="auctionStatusBadge" class="badge badge-status status-active">ACTIVE</div>
+        </div>
+
+        <!-- Item Title & Description -->
+        <div class="item-details">
+          <h1 id="itemTitle">1967 Vintage Fender Stratocaster</h1>
+          <p id="itemDescription" class="item-description">Original condition rare electric guitar</p>
+        </div>
+
+        <!-- Live Price Ticker Display -->
+        <div class="ticker-box" id="tickerBox">
+          <div class="ticker-label">CURRENT HIGHEST BID</div>
+          <div class="price-display">
+            <span class="currency-symbol">₹</span>
+            <span id="currentBidPrice" class="price-amount">50,000</span>
+          </div>
+
+          <div class="bidder-info-bar">
+            <span class="bidder-label">Leading Bidder:</span>
+            <div id="leadingBidderBadge" class="leading-bidder-badge empty">
+              <i class="fa-solid fa-trophy"></i>
+              <span id="leadingBidderName">No bids placed yet</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Countdown Clock -->
+        <div class="clock-panel" id="clockPanel">
+          <div class="clock-header">
+            <span>TIME REMAINING</span>
+            <span id="clockStatusLabel" class="clock-status-label">CLOSING SOON</span>
+          </div>
+          <div class="clock-display">
+            <div class="clock-number" id="timeRemainingText">00:60</div>
+            <div class="clock-subtext" id="timeRemainingSecs">60 seconds left</div>
+          </div>
+          <div class="clock-progress-track">
+            <div class="clock-progress-bar" id="clockProgressBar" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- Bidding Control Console -->
+        <div class="bidding-console" id="biddingConsole">
+          <div class="console-header">
+            <h3><i class="fa-solid fa-gavel"></i> Place Authoritative Bid</h3>
+            <span class="min-increment-info">Min Increment: <strong id="minIncrementValue">₹2,000</strong></span>
+          </div>
+
+          <!-- Quick Bid Increments -->
+          <div class="quick-bids-bar">
+            <span class="quick-bid-label">Quick Add:</span>
+            <button type="button" class="btn btn-quick" id="btnQuickMin">+Min (₹2,000)</button>
+            <button type="button" class="btn btn-quick" id="btnQuick5k">+₹5,000</button>
+            <button type="button" class="btn btn-quick" id="btnQuick10k">+₹10,000</button>
+          </div>
+
+          <form id="bidForm" class="bid-form">
+            <div class="bid-input-wrapper">
+              <span class="input-currency">₹</span>
+              <input type="number" id="bidAmountInput" class="bid-input" placeholder="Enter bid amount" required min="1" step="100">
+            </div>
+            <button type="submit" id="btnPlaceBid" class="btn btn-bid">
+              PLACE BID NOW <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+
+          <!-- Inline Bid Error Feedback -->
+          <div id="bidErrorMessage" class="bid-error-msg hidden">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span id="bidErrorText">Error message</span>
+          </div>
+        </div>
+
+        <!-- Sold Result Banner (Hidden until ended) -->
+        <div id="soldBanner" class="sold-banner hidden">
+          <div class="sold-icon"><i class="fa-solid fa-trophy text-gold"></i></div>
+          <h2 id="soldTitle">AUCTION CLOSED</h2>
+          <p id="soldSubtext">Winner: Vikram — Final Price: ₹52,000</p>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Auditable Live Bid Activity Feed -->
+      <div class="panel history-feed-panel">
+        <div class="panel-header">
+          <h2><i class="fa-solid fa-list-check text-accent"></i> Audit Bid History</h2>
+          <span class="history-count" id="historyCountBadge">0 Bids</span>
+        </div>
+
+        <div class="history-feed-container">
+          <div id="emptyHistoryMsg" class="empty-feed">
+            <i class="fa-solid fa-ghost"></i>
+            <p>No bids recorded yet. Be the first to place a bid!</p>
+          </div>
+          <ul id="bidHistoryList" class="bid-history-list">
+            <!-- Dynamically populated history entries -->
+          </ul>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <span>AUCTIONX Engine &copy; 2026 — Authoritative Low-Latency Bidding Protocol</span>
+        <span>Built with Node.js, Express, Socket.io</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Socket.io Client Library -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
